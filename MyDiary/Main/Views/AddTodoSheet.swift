@@ -65,11 +65,9 @@ struct AddTodoSheet: View {
     private func saveTodo() {
         let finalDueDate = hasDueDate ? dueDate : nil
         viewModel.addTodo(title: title, category: selectedCategory, dueDate: finalDueDate)
-        
-        // 햅틱 피드백
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
-        
+
+        HapticManager.notification(.success)
+
         isPresented = false
     }
 }

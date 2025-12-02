@@ -53,7 +53,8 @@ struct TodoListView: View {
                     .onDelete(perform: viewModel.deleteTodos)
                 }
                 .listStyle(PlainListStyle())
-                .frame(height: CGFloat(min(viewModel.todos.count, 5)) * 60)
+                .frame(maxHeight: 300)
+                .scrollContentBackground(.hidden)
             }
         }
         .sheet(isPresented: $showingAddSheet) {

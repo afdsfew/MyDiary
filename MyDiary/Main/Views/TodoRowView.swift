@@ -10,9 +10,7 @@ struct TodoRowView: View {
             // 체크박스
             Button(action: {
                 onToggle()
-                // 햅틱 피드백
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
+                HapticManager.impact(.light)
             }) {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24))

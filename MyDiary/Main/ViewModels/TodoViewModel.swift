@@ -5,14 +5,24 @@ import Combine
 class TodoViewModel: ObservableObject {
 
     @Published var todos: [TodoItem] = []
-    @Published var selectedDate: Date = Date()
     @Published var errorMessage: String?
     @Published var showError: Bool = false
 
     private let viewContext: NSManagedObjectContext
-    
-    init(context: NSManagedObjectContext) {
+    private let dateManager: DateManager
+    private var cancellables = Set<AnyCancellable>()
+
+    init(context: NSManagedObjectContext, dateManager: DateManager) {
         self.viewContext = context
+        self.dateManager = dateManager
+
+        // 날짜 변경 자동 감지
+        dateManager.$selectedDate
+            .sink { [weak self] _ in
+                self?.fetchTodos()
+            }
+            .store(in: &cancellables)
+
         fetchTodos()
     }
     
@@ -20,7 +30,7 @@ class TodoViewModel: ObservableObject {
     
     /// 선택된 날짜의 Todo 항목들을 가져옴
     func fetchTodos() {
-        let dayKey = DateHelper.dayKey(from: selectedDate)
+        let dayKey = DateHelper.dayKey(from: dateManager.selectedDate)
         let request: NSFetchRequest<TodoItem> = TodoItem.fetchRequest()
         request.predicate = NSPredicate(format: "dayKey == %@", dayKey)
         request.sortDescriptors = [
@@ -49,7 +59,7 @@ class TodoViewModel: ObservableObject {
         newTodo.isCompleted = false
         newTodo.category = category.rawValue
         newTodo.dueDate = dueDate
-        newTodo.dayKey = DateHelper.dayKey(from: selectedDate)
+        newTodo.dayKey = DateHelper.dayKey(from: dateManager.selectedDate)
         newTodo.createdAt = Date()
         
         saveContext()
@@ -88,14 +98,6 @@ class TodoViewModel: ObservableObject {
     func deleteTodos(at offsets: IndexSet) {
         offsets.map { todos[$0] }.forEach(viewContext.delete)
         saveContext()
-        fetchTodos()
-    }
-    
-    // MARK: - Date Selection
-    
-    /// 날짜 변경
-    func selectDate(_ date: Date) {
-        selectedDate = date
         fetchTodos()
     }
     

@@ -5,17 +5,31 @@ import Combine
 class DiaryViewModel: ObservableObject {
 
     @Published var diaryContent: String = ""
-    @Published var selectedDate: Date = Date()
     @Published var lastSavedTime: Date?
     @Published var errorMessage: String?
     @Published var showError: Bool = false
 
     private let viewContext: NSManagedObjectContext
+    private let dateManager: DateManager
     private var currentDiary: DiaryEntry?
     private var saveTask: Task<Void, Never>?
-    
-    init(context: NSManagedObjectContext) {
+    private var cancellables = Set<AnyCancellable>()
+
+    init(context: NSManagedObjectContext, dateManager: DateManager) {
         self.viewContext = context
+        self.dateManager = dateManager
+
+        // 날짜 변경 자동 감지 - 이전 일기 저장 후 새 일기 로드
+        dateManager.$selectedDate
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                // 저장 작업이 있으면 취소
+                self.saveTask?.cancel()
+                self.saveDiary()
+                self.loadDiary()
+            }
+            .store(in: &cancellables)
+
         loadDiary()
     }
     
@@ -23,7 +37,7 @@ class DiaryViewModel: ObservableObject {
     
     /// 선택된 날짜의 일기를 불러옴
     func loadDiary() {
-        let dayKey = DateHelper.dayKey(from: selectedDate)
+        let dayKey = DateHelper.dayKey(from: dateManager.selectedDate)
         let request: NSFetchRequest<DiaryEntry> = DiaryEntry.fetchRequest()
         request.predicate = NSPredicate(format: "dayKey == %@", dayKey)
         request.fetchLimit = 1
@@ -54,7 +68,7 @@ class DiaryViewModel: ObservableObject {
     
     /// 일기 저장 (자동 저장)
     func saveDiary() {
-        let dayKey = DateHelper.dayKey(from: selectedDate)
+        let dayKey = DateHelper.dayKey(from: dateManager.selectedDate)
         
         // 빈 내용이면 기존 일기 삭제
         if diaryContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -95,18 +109,6 @@ class DiaryViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Date Selection
-    
-    /// 날짜 변경
-    func selectDate(_ date: Date) {
-        // 현재 일기 저장
-        saveDiary()
-        
-        // 새 날짜로 변경
-        selectedDate = date
-        loadDiary()
-    }
-    
     // MARK: - Private Methods
 
     private func saveContext() {
