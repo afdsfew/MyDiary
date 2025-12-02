@@ -70,10 +70,11 @@ struct CalendarView: View {
                 }
             }
         }
-        .padding()
+        .padding(20)
         .background(AppTheme.cardBackground(for: colorScheme))
-        .cornerRadius(16)
-        .padding(.horizontal)
+        .cornerRadius(20)
+        .shadow(color: AppTheme.shadowColor(for: colorScheme), radius: 10, x: 0, y: 4)
+        .padding(.horizontal, 16)
     }
     
     // MARK: - Computed Properties
@@ -130,17 +131,17 @@ struct DateCell: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(calendar.component(.day, from: date))")
-                .font(.system(size: 16, weight: isSelected ? .bold : .regular))
+                .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(textColor)
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .background(backgroundColor)
-                .cornerRadius(20)
+                .cornerRadius(22)
             
             // 오늘 날짜 표시
             if isToday && !isSelected {
                 Circle()
                     .fill(Color.blue)
-                    .frame(width: 4, height: 4)
+                    .frame(width: 5, height: 5)
             }
         }
     }

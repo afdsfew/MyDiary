@@ -8,7 +8,7 @@ struct TodoRowView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             // 체크박스
             Button(action: {
                 onToggle()
@@ -17,32 +17,32 @@ struct TodoRowView: View {
                 generator.impactOccurred()
             }) {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24))
+                    .font(.system(size: 28))
                     .foregroundColor(todo.isCompleted ? .green : .gray)
             }
             .buttonStyle(PlainButtonStyle())
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 // 제목
                 Text(todo.title ?? "")
-                    .font(.system(size: 16, weight: .medium, design: .default))
+                    .font(.system(size: 17, weight: .medium, design: .default))
                     .strikethrough(todo.isCompleted, color: .gray)
                     .foregroundColor(todo.isCompleted ? .gray : .primary)
                 
                 // 카테고리 태그
                 if let categoryString = todo.category,
                    let category = Category(rawValue: categoryString) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Image(systemName: category.icon)
-                            .font(.system(size: 10))
+                            .font(.system(size: 11))
                         Text(category.rawValue)
-                            .font(.system(size: 12))
+                            .font(.system(size: 13, weight: .medium))
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(category.color(for: colorScheme))
-                    .cornerRadius(8)
+                    .cornerRadius(10)
                 }
             }
             
@@ -51,10 +51,10 @@ struct TodoRowView: View {
             // 마감일 표시 (있는 경우)
             if let dueDate = todo.dueDate {
                 Text(DateHelper.displayFormat(date: dueDate))
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
     }
 }
