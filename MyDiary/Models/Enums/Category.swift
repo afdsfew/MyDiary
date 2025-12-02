@@ -6,17 +6,8 @@ enum Category: String, CaseIterable, Codable {
     case assignment = "과제"
     case other = "기타"
     
-    var color: Color {
-        switch self {
-        case .study:
-            return Color(red: 0.6, green: 0.8, blue: 1.0) // 파스텔 블루
-        case .personal:
-            return Color(red: 1.0, green: 0.8, blue: 0.9) // 파스텔 핑크
-        case .assignment:
-            return Color(red: 1.0, green: 0.9, blue: 0.6) // 파스텔 옐로우
-        case .other:
-            return Color(red: 0.8, green: 0.9, blue: 0.8) // 파스텔 그린
-        }
+    func color(for colorScheme: ColorScheme) -> Color {
+        AppTheme.categoryColor(self, for: colorScheme)
     }
     
     var icon: String {

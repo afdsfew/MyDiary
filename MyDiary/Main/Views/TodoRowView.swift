@@ -5,6 +5,8 @@ struct TodoRowView: View {
     let todo: TodoItem
     let onToggle: () -> Void
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         HStack(spacing: 12) {
             // 체크박스
@@ -39,7 +41,7 @@ struct TodoRowView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(category.color)
+                    .background(category.color(for: colorScheme))
                     .cornerRadius(8)
                 }
             }

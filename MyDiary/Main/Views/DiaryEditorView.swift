@@ -4,6 +4,8 @@ struct DiaryEditorView: View {
     
     @ObservedObject var viewModel: DiaryViewModel
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 섹션 헤더
@@ -46,7 +48,7 @@ struct DiaryEditorView: View {
                     }
             }
             .frame(height: 200)
-            .background(Color(UIColor.systemGray6))
+            .background(AppTheme.secondaryBackground(for: colorScheme))
             .cornerRadius(12)
             .padding(.horizontal)
         }

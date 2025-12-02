@@ -7,6 +7,11 @@ struct MainView: View {
     @StateObject private var diaryViewModel: DiaryViewModel
     
     @State private var selectedDate: Date = Date()
+    @State private var showSettings = false
+    @State private var showCalendar = false
+    
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("themeMode") private var themeMode: String = ThemeMode.system.rawValue
     
     init(context: NSManagedObjectContext) {
         _todoViewModel = StateObject(wrappedValue: TodoViewModel(context: context))
@@ -17,12 +22,24 @@ struct MainView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
+                    // 달력 뷰 (접기/펼치기)
+                    if showCalendar {
+                        CalendarView(selectedDate: $selectedDate) { date in
+                            todoViewModel.selectDate(date)
+                            diaryViewModel.selectDate(date)
+                        }
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    
                     // 날짜 헤더
-                    DateHeaderView(selectedDate: $selectedDate, 
-                                 onDateChange: { date in
-                        todoViewModel.selectDate(date)
-                        diaryViewModel.selectDate(date)
-                    })
+                    DateHeaderView(
+                        selectedDate: $selectedDate,
+                        showCalendar: $showCalendar,
+                        onDateChange: { date in
+                            todoViewModel.selectDate(date)
+                            diaryViewModel.selectDate(date)
+                        }
+                    )
                     
                     Divider()
                         .padding(.horizontal)
@@ -40,13 +57,41 @@ struct MainView: View {
                 }
                 .padding(.vertical)
             }
+            .background(AppTheme.backgroundColor(for: colorScheme))
             .navigationTitle("My Diary")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
         }
+        .preferredColorScheme(colorSchemeForTheme)
         .onAppear {
             // 초기 날짜 동기화
             todoViewModel.selectDate(selectedDate)
             diaryViewModel.selectDate(selectedDate)
+        }
+    }
+    
+    
+    private var colorSchemeForTheme: ColorScheme? {
+        let mode = ThemeMode(rawValue: themeMode) ?? .system
+        switch mode {
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        case .system:
+            return nil
         }
     }
 }
@@ -56,14 +101,35 @@ struct MainView: View {
 struct DateHeaderView: View {
     
     @Binding var selectedDate: Date
+    @Binding var showCalendar: Bool
     let onDateChange: (Date) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(spacing: 8) {
-            // 날짜 표시
-            Text(DateHelper.displayFormat(date: selectedDate))
-                .font(.system(size: 24, weight: .bold, design: .default))
-                .foregroundColor(.primary)
+            // 날짜 표시 및 달력 토글
+            HStack {
+                Text(DateHelper.displayFormat(date: selectedDate))
+                    .font(.system(size: 24, weight: .bold, design: .default))
+                    .foregroundColor(AppTheme.textColor(for: colorScheme))
+                
+                Spacer()
+                
+                Button(action: {
+                    withAnimation(.spring()) {
+                        showCalendar.toggle()
+                    }
+                    
+                    // 햅틱 피드백
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                }) {
+                    Image(systemName: showCalendar ? "calendar.badge.minus" : "calendar")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+            }
             
             // 날짜 선택 버튼
             HStack(spacing: 16) {
@@ -101,7 +167,7 @@ struct DateHeaderView: View {
             }
         }
         .padding()
-        .background(Color(UIColor.systemGray6))
+        .background(AppTheme.cardBackground(for: colorScheme))
         .cornerRadius(16)
         .padding(.horizontal)
     }
