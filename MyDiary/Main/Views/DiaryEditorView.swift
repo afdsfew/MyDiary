@@ -39,16 +39,19 @@ struct DiaryEditorView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 12)
                     .onChange(of: viewModel.diaryContent) { oldValue, newValue in
-                        // 자동 저장 (디바운싱)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            viewModel.saveDiary()
-                        }
+                        // 자동 저장 (개선된 디바운싱)
+                        viewModel.scheduleSave()
                     }
             }
             .frame(height: 200)
             .background(Color(UIColor.systemGray6))
             .cornerRadius(12)
             .padding(.horizontal)
+        }
+        .alert("오류", isPresented: $viewModel.showError) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
         }
     }
 }

@@ -59,5 +59,10 @@ struct TodoListView: View {
         .sheet(isPresented: $showingAddSheet) {
             AddTodoSheet(viewModel: viewModel, isPresented: $showingAddSheet)
         }
+        .alert("오류", isPresented: $viewModel.showError) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
+        }
     }
 }

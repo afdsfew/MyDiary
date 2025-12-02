@@ -3,13 +3,16 @@ import CoreData
 import Combine
 
 class DiaryViewModel: ObservableObject {
-    
+
     @Published var diaryContent: String = ""
     @Published var selectedDate: Date = Date()
     @Published var lastSavedTime: Date?
-    
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
+
     private let viewContext: NSManagedObjectContext
     private var currentDiary: DiaryEntry?
+    private var saveTask: Task<Void, Never>?
     
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -24,7 +27,7 @@ class DiaryViewModel: ObservableObject {
         let request: NSFetchRequest<DiaryEntry> = DiaryEntry.fetchRequest()
         request.predicate = NSPredicate(format: "dayKey == %@", dayKey)
         request.fetchLimit = 1
-        
+
         do {
             let results = try viewContext.fetch(request)
             if let diary = results.first {
@@ -36,8 +39,14 @@ class DiaryViewModel: ObservableObject {
                 diaryContent = ""
                 lastSavedTime = nil
             }
+            errorMessage = nil
         } catch {
             print("Failed to load diary: \(error)")
+            errorMessage = "일기를 불러오는데 실패했습니다."
+            showError = true
+            currentDiary = nil
+            diaryContent = ""
+            lastSavedTime = nil
         }
     }
     
@@ -72,7 +81,20 @@ class DiaryViewModel: ObservableObject {
         
         saveContext()
     }
-    
+
+    /// 자동 저장 스케줄링 (디바운싱)
+    func scheduleSave() {
+        saveTask?.cancel()  // 이전 저장 작업 취소
+        saveTask = Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1초 대기
+            if !Task.isCancelled {
+                await MainActor.run {
+                    saveDiary()
+                }
+            }
+        }
+    }
+
     // MARK: - Date Selection
     
     /// 날짜 변경
@@ -86,12 +108,15 @@ class DiaryViewModel: ObservableObject {
     }
     
     // MARK: - Private Methods
-    
+
     private func saveContext() {
         do {
             try viewContext.save()
+            errorMessage = nil
         } catch {
             print("Failed to save context: \(error)")
+            errorMessage = "저장에 실패했습니다. 다시 시도해주세요."
+            showError = true
         }
     }
 }

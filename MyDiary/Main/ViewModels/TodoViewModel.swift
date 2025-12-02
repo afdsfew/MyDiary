@@ -3,10 +3,12 @@ import CoreData
 import Combine
 
 class TodoViewModel: ObservableObject {
-    
+
     @Published var todos: [TodoItem] = []
     @Published var selectedDate: Date = Date()
-    
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
+
     private let viewContext: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {
@@ -25,11 +27,15 @@ class TodoViewModel: ObservableObject {
             NSSortDescriptor(key: "isCompleted", ascending: true),
             NSSortDescriptor(key: "createdAt", ascending: true)
         ]
-        
+
         do {
             todos = try viewContext.fetch(request)
+            errorMessage = nil
         } catch {
             print("Failed to fetch todos: \(error)")
+            errorMessage = "할 일을 불러오는데 실패했습니다."
+            showError = true
+            todos = []
         }
     }
     
@@ -106,12 +112,15 @@ class TodoViewModel: ObservableObject {
     }
     
     // MARK: - Private Methods
-    
+
     private func saveContext() {
         do {
             try viewContext.save()
+            errorMessage = nil
         } catch {
             print("Failed to save context: \(error)")
+            errorMessage = "저장에 실패했습니다. 다시 시도해주세요."
+            showError = true
         }
     }
 }

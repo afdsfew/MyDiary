@@ -22,7 +22,7 @@ struct TodoRowView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 // 제목
-                Text(todo.title ?? "")
+                Text(todo.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "제목 없음")
                     .font(.system(size: 16, weight: .medium, design: .default))
                     .strikethrough(todo.isCompleted, color: .gray)
                     .foregroundColor(todo.isCompleted ? .gray : .primary)
