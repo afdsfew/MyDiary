@@ -53,6 +53,11 @@ struct AppTheme {
         colorScheme == .dark ? Color(UIColor.separator) : Color(UIColor.systemGray4)
     }
     
+    /// 그림자 색상
+    static func shadowColor(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.black.opacity(0.3) : Color.black.opacity(0.08)
+    }
+    
     /// 액센트 색상
     static let accentColor = Color.blue
     

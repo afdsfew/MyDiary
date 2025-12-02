@@ -5,18 +5,20 @@ struct TodoListView: View {
     @ObservedObject var viewModel: TodoViewModel
     @State private var showingAddSheet = false
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // 섹션 헤더
+        VStack(alignment: .leading, spacing: 16) {
+            // 헤더
             HStack {
                 Text("할 일")
-                    .font(.system(size: 20, weight: .bold, design: .default))
+                    .font(.system(size: 22, weight: .bold, design: .default))
                 
                 Spacer()
                 
-                // 완료 개수 표시
+                // 완료 개수
                 Text("\(viewModel.completedCount)/\(viewModel.totalCount)")
-                    .font(.system(size: 14))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.secondary)
                 
                 // 추가 버튼
@@ -24,16 +26,17 @@ struct TodoListView: View {
                     showingAddSheet = true
                 }) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.system(size: 28))
                         .foregroundColor(.blue)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
             
             // Todo 리스트
             if viewModel.todos.isEmpty {
                 // 빈 상태
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Image(systemName: "checkmark.circle")
                         .font(.system(size: 48))
                         .foregroundColor(.gray.opacity(0.3))
@@ -44,18 +47,27 @@ struct TodoListView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
             } else {
-                List {
+                VStack(spacing: 8) {
                     ForEach(viewModel.todos, id: \.id) { todo in
-                        TodoRowView(todo: todo) {
-                            viewModel.toggleCompletion(todo: todo)
-                        }
+                        TodoRowView(
+                            todo: todo,
+                            onToggle: {
+                                viewModel.toggleCompletion(todo: todo)
+                            }
+                        )
                     }
-                    .onDelete(perform: viewModel.deleteTodos)
+                    .onDelete { indexSet in
+                        viewModel.deleteTodos(at: indexSet)
+                    }
                 }
-                .listStyle(PlainListStyle())
-                .frame(height: CGFloat(min(viewModel.todos.count, 5)) * 60)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
         }
+        .background(AppTheme.cardBackground(for: colorScheme))
+        .cornerRadius(20)
+        .shadow(color: AppTheme.shadowColor(for: colorScheme), radius: 10, x: 0, y: 4)
+        .padding(.horizontal, 16)
         .sheet(isPresented: $showingAddSheet) {
             AddTodoSheet(viewModel: viewModel, isPresented: $showingAddSheet)
         }

@@ -7,9 +7,11 @@ class DiaryViewModel: ObservableObject {
     @Published var diaryContent: String = ""
     @Published var selectedDate: Date = Date()
     @Published var lastSavedTime: Date?
+    @Published var errorMessage: String?
     
     private let viewContext: NSManagedObjectContext
     private var currentDiary: DiaryEntry?
+    private var saveTask: Task<Void, Never>?
     
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -36,8 +38,13 @@ class DiaryViewModel: ObservableObject {
                 diaryContent = ""
                 lastSavedTime = nil
             }
+            errorMessage = nil
         } catch {
             print("Failed to load diary: \(error)")
+            errorMessage = "일기를 불러오는데 실패했습니다."
+            currentDiary = nil
+            diaryContent = ""
+            lastSavedTime = nil
         }
     }
     
@@ -73,6 +80,21 @@ class DiaryViewModel: ObservableObject {
         saveContext()
     }
     
+    // MARK: - Auto-Save with Debouncing
+    
+    /// 자동 저장 예약 (디바운싱)
+    func scheduleSave() {
+        saveTask?.cancel()
+        saveTask = Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1초
+            if !Task.isCancelled {
+                await MainActor.run {
+                    saveDiary()
+                }
+            }
+        }
+    }
+    
     // MARK: - Date Selection
     
     /// 날짜 변경
@@ -90,8 +112,10 @@ class DiaryViewModel: ObservableObject {
     private func saveContext() {
         do {
             try viewContext.save()
+            errorMessage = nil
         } catch {
             print("Failed to save context: \(error)")
+            errorMessage = "저장하는데 실패했습니다."
         }
     }
 }

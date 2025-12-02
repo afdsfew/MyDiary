@@ -73,6 +73,14 @@ struct MainView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
+            .alert("오류", isPresented: .constant(todoViewModel.errorMessage != nil || diaryViewModel.errorMessage != nil)) {
+                Button("확인") {
+                    todoViewModel.errorMessage = nil
+                    diaryViewModel.errorMessage = nil
+                }
+            } message: {
+                Text(todoViewModel.errorMessage ?? diaryViewModel.errorMessage ?? "")
+            }
         }
         .preferredColorScheme(colorSchemeForTheme)
         .onAppear {
@@ -107,11 +115,11 @@ struct DateHeaderView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             // 날짜 표시 및 달력 토글
             HStack {
                 Text(DateHelper.displayFormat(date: selectedDate))
-                    .font(.system(size: 24, weight: .bold, design: .default))
+                    .font(.system(size: 28, weight: .bold, design: .default))
                     .foregroundColor(AppTheme.textColor(for: colorScheme))
                 
                 Spacer()
@@ -126,21 +134,29 @@ struct DateHeaderView: View {
                     generator.impactOccurred()
                 }) {
                     Image(systemName: showCalendar ? "calendar.badge.minus" : "calendar")
-                        .font(.system(size: 20))
+                        .font(.system(size: 22))
                         .foregroundColor(.blue)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.secondaryBackground(for: colorScheme))
+                        .cornerRadius(12)
                 }
             }
             
             // 날짜 선택 버튼
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 // 이전 날짜
                 Button(action: {
                     changeDate(by: -1)
                 }) {
-                    Image(systemName: "chevron.left.circle.fill")
-                        .font(.system(size: 28))
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.blue)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.secondaryBackground(for: colorScheme))
+                        .cornerRadius(12)
                 }
+                
+                Spacer()
                 
                 // 오늘로 이동
                 Button(action: {
@@ -150,26 +166,32 @@ struct DateHeaderView: View {
                     Text("오늘")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
                         .background(Color.blue)
-                        .cornerRadius(20)
+                        .cornerRadius(12)
                 }
+                
+                Spacer()
                 
                 // 다음 날짜
                 Button(action: {
                     changeDate(by: 1)
                 }) {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.system(size: 28))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.blue)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.secondaryBackground(for: colorScheme))
+                        .cornerRadius(12)
                 }
             }
         }
-        .padding()
+        .padding(20)
         .background(AppTheme.cardBackground(for: colorScheme))
-        .cornerRadius(16)
-        .padding(.horizontal)
+        .cornerRadius(20)
+        .shadow(color: AppTheme.shadowColor(for: colorScheme), radius: 10, x: 0, y: 4)
+        .padding(.horizontal, 16)
     }
     
     private func changeDate(by days: Int) {
